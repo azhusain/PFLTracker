@@ -4,6 +4,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Parent-Friendly Label — Roadmap Tracker</title>
+<!-- ✅ FIREBASE: paste your config below after setting up your project -->
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyCrNlu-sqXe65gls_fodvUQIHC6j1XfOyU",
+    authDomain: "pfltracker-a2ee4.firebaseapp.com",
+    databaseURL: "https://pfltracker-a2ee4-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "pfltracker-a2ee4",
+    storageBucket: "pfltracker-a2ee4.firebasestorage.app",
+    messagingSenderId: "324416398146",
+    appId: "1:324416398146:web:b4d49005a86c21be28dedb",
+    measurementId: "G-KFS09BVF3T"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const dbRef = ref(db, 'pfl_roadmap');
+
+  // Expose to global scope so existing functions can use them
+  window._firebaseSet = (data) => set(dbRef, data);
+  window._firebaseOnValue = (cb) => onValue(dbRef, cb);
+  window._firebaseReady = true;
+</script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -375,7 +410,10 @@
 
 <div class="save-bar">
   <button class="save-btn" onclick="saveData()">💾 Save Progress</button>
-  <span class="save-confirm" id="save-confirm">✓ Saved to browser</span>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span id="sync-indicator" style="font-size:12px;font-weight:500">⏳ Connecting…</span>
+    <span class="save-confirm" id="save-confirm">✓ Saved</span>
+  </div>
 </div>
 
 <script>
@@ -458,13 +496,7 @@ const data = {
 
 const STORAGE_KEY = 'pfl_roadmap_v1';
 
-function loadSaved() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-  } catch { return {}; }
-}
-
-function saveData() {
+function getCurrentState() {
   const saved = {};
   document.querySelectorAll('.status-select').forEach(sel => {
     saved['status_' + sel.dataset.id] = sel.value;
@@ -472,10 +504,77 @@ function saveData() {
   document.querySelectorAll('.notes-input').forEach(inp => {
     saved['notes_' + inp.dataset.id] = inp.value;
   });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
-  const confirm = document.getElementById('save-confirm');
-  confirm.classList.add('visible');
-  setTimeout(() => confirm.classList.remove('visible'), 2500);
+  return saved;
+}
+
+function applyState(saved) {
+  document.querySelectorAll('.status-select').forEach(sel => {
+    const val = saved['status_' + sel.dataset.id];
+    if (val) { sel.value = val; applyStatusStyle(sel); }
+  });
+  document.querySelectorAll('.notes-input').forEach(inp => {
+    const val = saved['notes_' + inp.dataset.id];
+    if (val) inp.value = val;
+  });
+  updateStats();
+}
+
+function showSaveConfirm(msg) {
+  const el = document.getElementById('save-confirm');
+  el.textContent = msg || '✓ Saved';
+  el.classList.add('visible');
+  setTimeout(() => el.classList.remove('visible'), 2500);
+}
+
+function saveData() {
+  const saved = getCurrentState();
+
+  // Save to Firebase if ready
+  if (window._firebaseReady && window._firebaseSet) {
+    window._firebaseSet(saved)
+      .then(() => showSaveConfirm('✓ Saved to cloud'))
+      .catch(err => {
+        console.warn('Firebase save failed, falling back to localStorage', err);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+        showSaveConfirm('✓ Saved locally');
+      });
+  } else {
+    // Fallback to localStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+    showSaveConfirm('✓ Saved locally');
+  }
+}
+
+function loadSaved() {
+  // Returns a promise-like — resolves with saved data
+  return new Promise((resolve) => {
+    if (window._firebaseReady && window._firebaseOnValue) {
+      window._firebaseOnValue((snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          resolve(data);
+        } else {
+          // Nothing in Firebase yet, check localStorage
+          try {
+            resolve(JSON.parse(localStorage.getItem(STORAGE_KEY)) || {});
+          } catch { resolve({}); }
+        }
+      });
+    } else {
+      // Firebase not loaded yet — wait briefly then fall back to localStorage
+      setTimeout(() => {
+        if (window._firebaseReady && window._firebaseOnValue) {
+          window._firebaseOnValue((snapshot) => {
+            resolve(snapshot.val() || {});
+          });
+        } else {
+          try {
+            resolve(JSON.parse(localStorage.getItem(STORAGE_KEY)) || {});
+          } catch { resolve({}); }
+        }
+      }, 800);
+    }
+  });
 }
 
 function updateStats() {
@@ -528,11 +627,47 @@ function buildRow(item, saved) {
     </tr>`;
 }
 
-function init() {
-  const saved = loadSaved();
-  document.getElementById('tbody-pre').innerHTML = data.pre.map(i => buildRow(i, saved)).join('');
-  document.getElementById('tbody-during').innerHTML = data.during.map(i => buildRow(i, saved)).join('');
+function showLoadingState() {
+  const indicator = document.getElementById('sync-indicator');
+  if (indicator) { indicator.textContent = '⏳ Syncing…'; indicator.style.color = '#F39C12'; }
+}
+function showSyncedState() {
+  const indicator = document.getElementById('sync-indicator');
+  if (indicator) { indicator.textContent = '☁️ Live sync on'; indicator.style.color = '#2ECC71'; }
+}
+function showOfflineState() {
+  const indicator = document.getElementById('sync-indicator');
+  if (indicator) { indicator.textContent = '💾 Local only'; indicator.style.color = '#6B7C99'; }
+}
+
+async function init() {
+  // Build table with empty state first so it's not blank
+  const emptySaved = {};
+  document.getElementById('tbody-pre').innerHTML = data.pre.map(i => buildRow(i, emptySaved)).join('');
+  document.getElementById('tbody-during').innerHTML = data.during.map(i => buildRow(i, emptySaved)).join('');
   updateStats();
+
+  showLoadingState();
+
+  try {
+    const saved = await loadSaved();
+    applyState(saved);
+
+    if (window._firebaseReady) {
+      showSyncedState();
+      // Real-time listener — updates all clients when anyone saves
+      window._firebaseOnValue((snapshot) => {
+        const latest = snapshot.val();
+        if (latest) applyState(latest);
+      });
+    } else {
+      showOfflineState();
+    }
+  } catch(e) {
+    console.warn('Load failed:', e);
+    showOfflineState();
+  }
+
   // Auto-save on notes blur
   document.querySelectorAll('.notes-input').forEach(inp => {
     inp.addEventListener('blur', saveData);
