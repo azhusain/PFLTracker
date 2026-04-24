@@ -348,6 +348,33 @@
   .timeline-input:focus { border-color: var(--aqua); background: var(--white); box-shadow: 0 0 0 2px rgba(19,147,189,0.15); }
   .timeline-original { font-size: 10px; color: var(--muted); margin-top: 3px; font-style: italic; }
 
+  /* Loading overlay */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--cream);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+    transition: opacity 0.3s ease;
+  }
+  .loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .loading-spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--cobalt);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  .loading-text { font-size: 13px; color: var(--muted); font-weight: 500; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   @media (max-width: 768px) {
     .header { padding: 24px 20px; }
     .stats-bar { padding: 14px 20px; gap: 16px; }
@@ -362,6 +389,11 @@
 </style>
 </head>
 <body>
+
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Loading…</div>
+</div>
 
 <div class="header">
   <div class="header-inner">
@@ -732,9 +764,18 @@ async function init() {
 
   showLoadingState();
 
+  function hideOverlay() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+      overlay.classList.add('hidden');
+      setTimeout(() => overlay.remove(), 350);
+    }
+  }
+
   try {
     const saved = await loadSaved();
     applyState(saved);
+    hideOverlay();
 
     if (window._firebaseReady) {
       showSyncedState();
@@ -749,6 +790,7 @@ async function init() {
   } catch(e) {
     console.warn('Load failed:', e);
     showOfflineState();
+    hideOverlay();
   }
 
   // Auto-save on notes/owner blur
