@@ -30,6 +30,11 @@
   window._firebaseSet = (data) => set(dbRef, data);
   window._firebaseOnValue = (cb) => onValue(dbRef, cb);
   window._firebaseReady = true;
+
+  // Module scripts run after DOMContentLoaded — main script already ran, so call init directly
+  if (typeof window._appInit === 'function') {
+    window._appInit();
+  }
 </script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -752,7 +757,11 @@ async function init() {
   });
 }
 
-init();
+// Register as _appInit so the Firebase module can call it once ready
+window._appInit = init;
+
+// If Firebase module already ran before this script (unlikely but safe), call now
+// Otherwise the module script will call window._appInit() itself
 </script>
 </body>
 </html>
