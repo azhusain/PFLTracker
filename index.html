@@ -6,14 +6,10 @@
 <title>Parent-Friendly Label — Roadmap Tracker</title>
 <!-- ✅ FIREBASE: paste your config below after setting up your project -->
 <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
     apiKey: "AIzaSyCrNlu-sqXe65gls_fodvUQIHC6j1XfOyU",
     authDomain: "pfltracker-a2ee4.firebaseapp.com",
@@ -25,12 +21,8 @@
     measurementId: "G-KFS09BVF3T"
   };
 
-  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
-</script>
-
-  const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const dbRef = ref(db, 'pfl_roadmap');
 
@@ -313,6 +305,44 @@
   .col-status { width: 13%; }
   .col-notes { width: 28%; }
 
+  /* Owner editable input */
+  .owner-input {
+    width: 100%;
+    border: 1px solid transparent;
+    border-radius: 99px;
+    padding: 3px 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--cobalt);
+    background: var(--ice);
+    outline: none;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .owner-input:hover { border-color: var(--border); }
+  .owner-input:focus { border-color: var(--aqua); background: var(--white); box-shadow: 0 0 0 2px rgba(19,147,189,0.15); border-radius: 6px; }
+  .owner-input::placeholder { color: var(--muted); font-weight: 400; }
+
+  /* Timeline date picker */
+  .timeline-input {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--cobalt);
+    background: var(--cream);
+    outline: none;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .timeline-input:hover { border-color: var(--aqua); background: var(--white); }
+  .timeline-input:focus { border-color: var(--aqua); background: var(--white); box-shadow: 0 0 0 2px rgba(19,147,189,0.15); }
+  .timeline-original { font-size: 10px; color: var(--muted); margin-top: 3px; font-style: italic; }
+
   @media (max-width: 768px) {
     .header { padding: 24px 20px; }
     .stats-bar { padding: 14px 20px; gap: 16px; }
@@ -504,6 +534,12 @@ function getCurrentState() {
   document.querySelectorAll('.notes-input').forEach(inp => {
     saved['notes_' + inp.dataset.id] = inp.value;
   });
+  document.querySelectorAll('.owner-input').forEach(inp => {
+    saved['owner_' + inp.dataset.id] = inp.value;
+  });
+  document.querySelectorAll('.timeline-input').forEach(inp => {
+    saved['timeline_' + inp.dataset.id] = inp.value;
+  });
   return saved;
 }
 
@@ -514,7 +550,15 @@ function applyState(saved) {
   });
   document.querySelectorAll('.notes-input').forEach(inp => {
     const val = saved['notes_' + inp.dataset.id];
-    if (val) inp.value = val;
+    if (val !== undefined) inp.value = val;
+  });
+  document.querySelectorAll('.owner-input').forEach(inp => {
+    const val = saved['owner_' + inp.dataset.id];
+    if (val !== undefined) inp.value = val;
+  });
+  document.querySelectorAll('.timeline-input').forEach(inp => {
+    const val = saved['timeline_' + inp.dataset.id];
+    if (val !== undefined) inp.value = val;
   });
   updateStats();
 }
@@ -598,12 +642,29 @@ function applyStatusStyle(sel) {
   sel.className = 'status-select ' + sel.value;
 }
 
+function parseToDateInput(timeline) {
+  // Tries to convert "10th May", "1st June" etc to YYYY-MM-DD for the date input
+  if (!timeline || timeline === 'TBD' || timeline === '—') return '';
+  // Strip ordinal suffixes
+  const clean = timeline.replace(/(\d+)(st|nd|rd|th)/i, '$1').replace(' onwards', '').trim();
+  const parsed = new Date(clean + ' 2026');
+  if (isNaN(parsed)) return '';
+  return parsed.toISOString().split('T')[0];
+}
+
+function formatDateDisplay(isoDate) {
+  if (!isoDate) return '';
+  const d = new Date(isoDate + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
 function buildRow(item, saved) {
-  const statusVal = saved['status_' + item.id] || 'not-started';
-  const notesVal = saved['notes_' + item.id] || '';
-  const timelineHtml = item.timeline === 'TBD'
-    ? `<span class="timeline-tbd">TBD</span>`
-    : `<span class="timeline-badge">${item.timeline}</span>`;
+  const statusVal  = saved['status_'   + item.id] || 'not-started';
+  const notesVal   = saved['notes_'    + item.id] || '';
+  const ownerVal   = saved['owner_'    + item.id] !== undefined ? saved['owner_' + item.id] : item.owner;
+  const timelineVal = saved['timeline_' + item.id] !== undefined
+    ? saved['timeline_' + item.id]
+    : parseToDateInput(item.timeline);
 
   return `
     <tr>
@@ -612,8 +673,25 @@ function buildRow(item, saved) {
         <div class="step-title">${item.step}</div>
         ${item.detail && item.detail !== '—' ? `<div class="step-detail">${item.detail}</div>` : ''}
       </td>
-      <td><span class="owner-pill">${item.owner}</span></td>
-      <td>${timelineHtml}</td>
+      <td>
+        <input
+          class="owner-input"
+          data-id="${item.id}"
+          value="${ownerVal}"
+          placeholder="Assign owner…"
+          onblur="saveData()"
+        >
+      </td>
+      <td>
+        <input
+          type="date"
+          class="timeline-input"
+          data-id="${item.id}"
+          value="${timelineVal}"
+          onchange="saveData()"
+        >
+        ${!timelineVal && item.timeline && item.timeline !== 'TBD' ? `<div class="timeline-original">${item.timeline}</div>` : ''}
+      </td>
       <td>
         <select class="status-select ${statusVal}" data-id="${item.id}" onchange="applyStatusStyle(this); updateStats()">
           <option value="not-started" ${statusVal==='not-started'?'selected':''}>Not Started</option>
@@ -668,8 +746,8 @@ async function init() {
     showOfflineState();
   }
 
-  // Auto-save on notes blur
-  document.querySelectorAll('.notes-input').forEach(inp => {
+  // Auto-save on notes/owner blur
+  document.querySelectorAll('.notes-input, .owner-input').forEach(inp => {
     inp.addEventListener('blur', saveData);
   });
 }
