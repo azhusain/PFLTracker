@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PFL Cycle 4 Tracker — PureHealth</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cobalt: #18518F;
+    --aqua: #1393BD;
+    --purity: #77C8D2;
+    --navy: #1B2A4A;
+    --bg: #F7F8FA;
+    --surface: #FFFFFF;
+    --border: #E4E8EE;
+    --text: #1B2A4A;
+    --text-muted: #7A8499;
+    --text-light: #A8B0BF;
+    --cat-a-bg: #E8F4FE; --cat-a: #0D52A0;
+    --cat-b-bg: #E6F9F1; --cat-b: #0A6B45;
+    --cat-c-bg: #FEF3E2; --cat-c: #944800;
+    --cat-d-bg: #FDEEF4; --cat-d: #8B1A4A;
+    --cat-e-bg: #EEE8FE; --cat-e: #4A2DAA;
+    --mand-bg: #E8EDFE; --mand: #2B3FBB;
+    --opt-bg: #EEF9F0; --opt: #1A6B35;
+    --high-bg: #FEECEC; --high: #B32020;
+    --med-bg: #FEF6E4; --med: #8A5500;
+    --low-bg: #EEF9F0; --low: #1A6B35;
+    --status-ns-bg: #F2F3F5; --status-ns: #6B7280;
+    --status-ip-bg: #FEF6E4; --status-ip: #8A5500;
+    --status-done-bg: #EEF9F0; --status-done: #1A6B35;
+    --status-blocked-bg: #FEECEC; --status-blocked: #B32020;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--navy);
+    padding: 24px 32px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(27,42,74,0.18);
+  }
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.3px;
+  }
+  .header-sub {
+    font-size: 12px;
+    color: var(--purity);
+    margin-top: 3px;
+    font-weight: 400;
+  }
+  .header-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .hbadge {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+  }
+  .hbadge.deadline { background: rgba(119,200,210,0.2); border-color: var(--purity); color: var(--purity); }
+
+  /* PROGRESS BAR */
+  .progress-section {
+    background: rgba(255,255,255,0.06);
+    margin-top: 16px;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .prog-item { flex: 1; min-width: 140px; }
+  .prog-label { font-size: 11px; color: var(--purity); margin-bottom: 5px; font-weight: 500; }
+  .prog-bar { height: 5px; background: rgba(255,255,255,0.12); border-radius: 99px; overflow: hidden; }
+  .prog-fill { height: 100%; background: var(--purity); border-radius: 99px; transition: width 0.4s ease; }
+  .prog-fill.warn { background: #F59E0B; }
+  .prog-count { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; font-family: 'DM Mono', monospace; }
+
+  /* TABS */
+  .tabs-wrap {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    display: flex;
+    gap: 0;
+    position: sticky;
+    top: 148px;
+    z-index: 90;
+  }
+  .tab {
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tab:hover { color: var(--cobalt); }
+  .tab.active { color: var(--cobalt); border-bottom-color: var(--cobalt); font-weight: 600; }
+  .tab-count {
+    display: inline-block;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    padding: 1px 6px;
+    border-radius: 99px;
+    margin-left: 6px;
+    font-weight: 500;
+  }
+  .tab.active .tab-count { background: var(--cobalt); color: #fff; }
+
+  /* TOOLBAR */
+  .toolbar {
+    padding: 14px 32px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .toolbar input[type="text"] {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    flex: 1;
+    min-width: 200px;
+    outline: none;
+    transition: border 0.15s;
+  }
+  .toolbar input[type="text"]:focus { border-color: var(--aqua); background: #fff; }
+  .toolbar select {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 7px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    outline: none;
+  }
+  .toolbar select:focus { border-color: var(--aqua); }
+  .save-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 14px;
+    background: var(--cobalt);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    margin-left: auto;
+  }
+  .save-btn:hover { background: var(--navy); }
+  .saved-msg { font-size: 11px; color: var(--low); opacity: 0; transition: opacity 0.3s; }
+  .saved-msg.show { opacity: 1; }
+
+  /* PANE */
+  .pane { display: none; }
+  .pane.active { display: block; }
+
+  /* TABLE */
+  .table-wrap {
+    padding: 20px 32px 40px;
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 960px;
+  }
+  thead th {
+    background: var(--navy);
+    color: rgba(255,255,255,0.7);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    text-align: left;
+    white-space: nowrap;
+    position: sticky;
+  }
+  thead th:first-child { border-radius: 8px 0 0 0; }
+  thead th:last-child  { border-radius: 0 8px 0 0; }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  tbody tr:hover { background: #F0F4FA; }
+  tbody tr.hidden { display: none; }
+
+  td {
+    padding: 11px 12px;
+    vertical-align: top;
+    font-size: 13px;
+  }
+
+  /* BADGES */
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 99px;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+  }
+  .badge.cat-a { background: var(--cat-a-bg); color: var(--cat-a); }
+  .badge.cat-b { background: var(--cat-b-bg); color: var(--cat-b); }
+  .badge.cat-c { background: var(--cat-c-bg); color: var(--cat-c); }
+  .badge.cat-d { background: var(--cat-d-bg); color: var(--cat-d); }
+  .badge.cat-e { background: var(--cat-e-bg); color: var(--cat-e); }
+  .badge.mand  { background: var(--mand-bg);  color: var(--mand);  }
+  .badge.opt   { background: var(--opt-bg);   color: var(--opt);   }
+  .badge.high  { background: var(--high-bg);  color: var(--high);  }
+  .badge.med   { background: var(--med-bg);   color: var(--med);   }
+  .badge.low   { background: var(--low-bg);   color: var(--low);   }
+  .badge.new-c4 { background: #FEF6E4; color: #8A5500; border: 1px solid #F59E0B; }
+
+  /* INLINE INPUTS */
+  .editable {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--text);
+    transition: all 0.15s;
+    resize: none;
+    outline: none;
+  }
+  .editable:hover { border-color: var(--border); background: var(--bg); }
+  .editable:focus { border-color: var(--aqua); background: #fff; box-shadow: 0 0 0 3px rgba(19,147,189,0.1); }
+
+  .status-select {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    outline: none;
+    width: 100%;
+    transition: all 0.15s;
+  }
+  .status-select.ns       { background: var(--status-ns-bg);      color: var(--status-ns);      border-color: #D1D5DB; }
+  .status-select.ip       { background: var(--status-ip-bg);      color: var(--status-ip);      border-color: #FCD34D; }
+  .status-select.done     { background: var(--status-done-bg);    color: var(--status-done);    border-color: #6EE7B7; }
+  .status-select.blocked  { background: var(--status-blocked-bg); color: var(--status-blocked); border-color: #FCA5A5; }
+
+  /* CRITERIA NAME CELL */
+  .criteria-name { font-weight: 600; color: var(--text); font-size: 13px; margin-bottom: 3px; }
+  .criteria-note { font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 3px; }
+  .criteria-note.flag { color: #8A5500; font-weight: 500; }
+
+  /* REF */
+  .ref-cell { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--cobalt); white-space: nowrap; }
+
+  /* EVIDENCE TEXT */
+  .ev-text { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+  /* SURVEY AREA */
+  .survey-area { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+  .empty-state p { font-size: 14px; }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: var(--text-light);
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>PFL Cycle 4 Tracker — PureHealth</h1>
+      <div class="header-sub">Parent-Friendly Label™ · Abu Dhabi Early Childhood Authority</div>
+    </div>
+    <div class="header-badges">
+      <span class="hbadge">19 criteria</span>
+      <span class="hbadge">8 mandatory</span>
+      <span class="hbadge">11 optional (need ≥6)</span>
+      <span class="hbadge deadline">Deadline: 31 Jul 2026</span>
+    </div>
+  </div>
+  <div class="progress-section">
+    <div class="prog-item">
+      <div class="prog-label">Mandatory criteria</div>
+      <div class="prog-bar"><div class="prog-fill warn" id="prog-mand" style="width:0%"></div></div>
+      <div class="prog-count" id="prog-mand-txt">0 / 8 done</div>
+    </div>
+    <div class="prog-item">
+      <div class="prog-label">Optional criteria</div>
+      <div class="prog-bar"><div class="prog-fill" id="prog-opt" style="width:0%"></div></div>
+      <div class="prog-count" id="prog-opt-txt">0 / 11 done</div>
+    </div>
+    <div class="prog-item">
+      <div class="prog-label">Survey preparation</div>
+      <div class="prog-bar"><div class="prog-fill" id="prog-surv" style="width:0%"></div></div>
+      <div class="prog-count" id="prog-surv-txt">0 / 17 done</div>
+    </div>
+  </div>
+</div>
+
+<div class="tabs-wrap">
+  <button class="tab active" onclick="switchTab('criteria')">Application Criteria <span class="tab-count" id="tc-criteria">19</span></button>
+  <button class="tab" onclick="switchTab('survey')">Employee Survey <span class="tab-count" id="tc-survey">17</span></button>
+</div>
+
+<!-- ── CRITERIA PANE ── -->
+<div id="criteria-pane" class="pane active">
+  <div class="toolbar">
+    <input type="text" id="c-search" placeholder="Search criteria..." oninput="applyFilters('c')">
+    <select id="c-cat" onchange="applyFilters('c')">
+      <option value="">All categories</option>
+      <option value="A">A – Parental Leave</option>
+      <option value="B">B – Flexible Work</option>
+      <option value="C">C – Family Care</option>
+      <option value="D">D – Family Wellbeing</option>
+      <option value="E">E – Culture</option>
+    </select>
+    <select id="c-type" onchange="applyFilters('c')">
+      <option value="">Mandatory + Optional</option>
+      <option value="Mandatory">Mandatory only</option>
+      <option value="Optional">Optional only</option>
+    </select>
+    <select id="c-status" onchange="applyFilters('c')">
+      <option value="">All statuses</option>
+      <option value="Not Started">Not Started</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Done">Done</option>
+      <option value="Blocked">Blocked</option>
+    </select>
+    <button class="save-btn" onclick="saveData()">Save progress</button>
+    <span class="saved-msg" id="save-msg">✓ Saved</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:48px">Ref</th>
+          <th style="width:130px">Category</th>
+          <th style="width:95px">Type</th>
+          <th style="width:220px">Criteria</th>
+          <th style="width:220px">Evidence Required</th>
+          <th style="width:70px">Priority</th>
+          <th style="width:130px">Owner</th>
+          <th style="width:160px">Evidence Link</th>
+          <th style="width:120px">Status</th>
+        </tr>
+      </thead>
+      <tbody id="criteria-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── SURVEY PANE ── -->
+<div id="survey-pane" class="pane">
+  <div class="toolbar">
+    <input type="text" id="s-search" placeholder="Search survey items..." oninput="applyFilters('s')">
+    <select id="s-area" onchange="applyFilters('s')">
+      <option value="">All areas</option>
+      <option value="Overall">Overall PF NPS</option>
+      <option value="Wellbeing">Wellbeing & work-life</option>
+      <option value="Parental leave">Parental leave awareness</option>
+      <option value="Utilisation">Utilisation & comfort</option>
+      <option value="Satisfaction">Satisfaction</option>
+      <option value="Manager">Manager behaviour</option>
+      <option value="Feedback">Feedback (NEW C4)</option>
+      <option value="logistics">Survey logistics</option>
+    </select>
+    <select id="s-status" onchange="applyFilters('s')">
+      <option value="">All statuses</option>
+      <option value="Not Started">Not Started</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Done">Done</option>
+      <option value="Blocked">Blocked</option>
+    </select>
+    <button class="save-btn" onclick="saveData()">Save progress</button>
+    <span class="saved-msg" id="save-msg-s">✓ Saved</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:36px">#</th>
+          <th style="width:140px">Area</th>
+          <th style="width:260px">Survey Question / Item</th>
+          <th style="width:80px">PFL Target</th>
+          <th style="width:220px">Prep Required</th>
+          <th style="width:130px">Owner</th>
+          <th style="width:160px">Notes</th>
+          <th style="width:120px">Status</th>
+        </tr>
+      </thead>
+      <tbody id="survey-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="footer">PureHealth Culture & Engagement · PFL Cycle 4 · Data saved locally in browser</div>
+
+<script>
+const CRITERIA = [
+  {ref:"A1",cat:"A",catLabel:"A – Parental Leave",type:"Mandatory",name:"Maternity leave",evidence:"Policy doc showing 90+ calendar days paid (PFL) / 136+ days (PFL+). Must cover stillbirth/miscarriage after 6 months.",priority:"High",note:"Mandatory fail in C3 — must fix. Add stillbirth provisions explicitly.",flagNote:true},
+  {ref:"A2",cat:"A",catLabel:"A – Parental Leave",type:"Mandatory",name:"Paternity leave",evidence:"Policy doc showing 6+ paid working days (PFL) / 10+ days (PFL+).",priority:"High",note:"Review current entitlement against thresholds."},
+  {ref:"A3",cat:"A",catLabel:"A – Parental Leave",type:"Optional",name:"Adoption leave",evidence:"Documented adoption leave policy equivalent to maternity/paternity.",priority:"Medium",note:"New in C4. Check if any provision exists or needs creating."},
+  {ref:"A4",cat:"A",catLabel:"A – Parental Leave",type:"Optional",name:"Parental transition support",evidence:"Return-to-work programme or guide; comms to returning parents.",priority:"Medium",note:"Good practice exists informally — formalise and document."},
+  {ref:"B1",cat:"B",catLabel:"B – Flexible Work",type:"Mandatory",name:"Flexible work policy",evidence:"Documented policy covering flexible hours + remote work with parent-specific provisions.",priority:"High",note:"Gap in C3 was documentation not practice. Write it down.",flagNote:true},
+  {ref:"B2",cat:"B",catLabel:"B – Flexible Work",type:"Optional",name:"Emergency childcare flexibility",evidence:"Policy or documented practice for emergency childcare situations.",priority:"Medium",note:"C3 survey scored 91%. Formalise what already happens."},
+  {ref:"B3",cat:"B",catLabel:"B – Flexible Work",type:"Optional",name:"School/family event flexibility",evidence:"Evidence of leave/flexibility allowance for school events.",priority:"Low",note:"Document any existing informal practice."},
+  {ref:"C1",cat:"C",catLabel:"C – Family Care",type:"Mandatory",name:"Nursing/lactation support",evidence:"Photos or description of private nursing room. Policy showing 2hrs/day breaks for 6+ months.",priority:"High",note:"Physical room must exist and be documented. Confirm across sites."},
+  {ref:"C2",cat:"C",catLabel:"C – Family Care",type:"Optional",name:"Childcare support",evidence:"Subsidised childcare, referral scheme, or on-site facility documentation.",priority:"Medium",note:"Any formal or informal support qualifies — document it."},
+  {ref:"C3",cat:"C",catLabel:"C – Family Care",type:"Optional",name:"Children of Determination support",evidence:"Policy or programme supporting employees with children who have special needs.",priority:"High",note:"52% of C3 respondents care for a CoD child. Visible gap — priority to create.",flagNote:true},
+  {ref:"D1",cat:"D",catLabel:"D – Family Wellbeing",type:"Mandatory",name:"Wellbeing support programme",evidence:"Mental & physical wellbeing programme documentation; evidence of PRO support for new parents.",priority:"High",note:"Must be formalised — PureHealth wellbeing pillars should cover this."},
+  {ref:"D2",cat:"D",catLabel:"D – Family Wellbeing",type:"Mandatory",name:"Worker protection from termination",evidence:"Policy clause protecting employees from termination during pregnancy/parental leave.",priority:"High",note:"Verify clause exists and is clearly worded in HR policy."},
+  {ref:"D3",cat:"D",catLabel:"D – Family Wellbeing",type:"Optional",name:"Financial wellbeing support",evidence:"Any financial support, advice, or benefits for families documented.",priority:"Low",note:"Check if existing benefits (insurance, allowances) qualify."},
+  {ref:"D4",cat:"D",catLabel:"D – Family Wellbeing",type:"Optional",name:"Family social connection",evidence:"Initiatives supporting employee family community (events, networks, comms).",priority:"Low",note:"C&E programmes may already qualify — document evidence."},
+  {ref:"E1",cat:"E",catLabel:"E – Culture",type:"Mandatory",name:"Manager enablement / training",evidence:"Structured PF training programme for managers — at least 2 options, periodic. Must be formalised, not ad hoc.",priority:"High",note:"Mandatory fail in C3. Must create structured programme.",flagNote:true},
+  {ref:"E2",cat:"E",catLabel:"E – Culture",type:"Mandatory",name:"Internal promotion of PF policies",evidence:"SharePoint/intranet policy hub, comms screenshots, PureSpace or equivalent.",priority:"Medium",note:"C3 passed. SharePoint hub meets this. Maintain and keep updated."},
+  {ref:"E3",cat:"E",catLabel:"E – Culture",type:"Optional",name:"Policy monitoring & impact",evidence:"At least 2 specific named tracked PF metrics (e.g. parental leave uptake rate, return-to-work rate). 'Yes' alone no longer sufficient.",priority:"High",note:"⚠ SIGNIFICANT C4 CHANGE — 'yes' is not enough. Name 2+ specific metrics now.",flagNote:true},
+  {ref:"E4",cat:"E",catLabel:"E – Culture",type:"Optional",name:"Employee listening & feedback",evidence:"Feedback mechanism in place; new C4 survey questions on manager-level PF policy application.",priority:"Medium",note:"Two new survey questions in C4 probe manager feedback specifically."},
+  {ref:"E5",cat:"E",catLabel:"E – Culture",type:"Optional",name:"D&I in family policies",evidence:"Evidence of inclusive policies (non-binary parents, single parents, CoD, etc.).",priority:"Medium",note:"Review existing policies for inclusive language and coverage."},
+];
+
+const SURVEY = [
+  {num:1,area:"Overall",question:"Would promote organisation as parent-friendly workplace (NPS 9–10)",threshold:"60%",prep:"Drive survey participation; ensure working parents are included in sample.",note:"Primary headline metric.",isNew:false},
+  {num:2,area:"Overall",question:"Believe UAE is a parent-friendly place to work",threshold:"—",prep:"Context/benchmarking only — no prep needed.",note:"",isNew:false},
+  {num:3,area:"Wellbeing",question:"Organisation helps keep a healthy work-life balance",threshold:"60%",prep:"Flexible work policy in place and communicated before survey.",note:"",isNew:false},
+  {num:4,area:"Wellbeing",question:"Organisation positively affects daily work productivity",threshold:"60%",prep:"Wellbeing programme active and visible to employees.",note:"",isNew:false},
+  {num:5,area:"Wellbeing",question:"Organisation helps bond and build meaningful connections with children",threshold:"60%",prep:"Family-friendly events/social initiatives in evidence.",note:"",isNew:false},
+  {num:6,area:"Parental leave",question:"Know about parental leave entitlements",threshold:"60%",prep:"Comms campaign; policy accessible on SharePoint/PureSpace.",note:"",isNew:false},
+  {num:7,area:"Parental leave",question:"Aware of parent-friendly support options available",threshold:"60%",prep:"Awareness comms push before survey goes live.",note:"",isNew:false},
+  {num:8,area:"Parental leave",question:"Know how and where to access PF support information",threshold:"60%",prep:"Clear signposting on intranet/PureSpace.",note:"",isNew:false},
+  {num:9,area:"Utilisation",question:"Comfortable utilising parent-friendly support",threshold:"60%",prep:"Manager training; culture of psychological safety.",note:"",isNew:false},
+  {num:10,area:"Satisfaction",question:"Satisfied with parent-friendly support overall",threshold:"60%",prep:"Address known gaps (E1, E3, C3) before survey launches.",note:"",isNew:false},
+  {num:11,area:"Manager",question:"Line manager is knowledgeable on parent-friendly policies",threshold:"60%",prep:"Manager enablement programme (links directly to E1 mandatory).",note:"",isNew:false},
+  {num:12,area:"Manager",question:"Line manager is supportive of caregiver responsibilities",threshold:"60%",prep:"Manager training; tone from leadership.",note:"",isNew:false},
+  {num:13,area:"Manager",question:"Managers apply parent-friendly support consistently",threshold:"60%",prep:"Policy consistency checks; HRBP awareness.",note:"",isNew:false},
+  {num:14,area:"Feedback",question:"Can provide feedback on how manager applies PF policies",threshold:"60%",prep:"Feedback channel visible and communicated to employees.",note:"NEW C4 — two-part question: capability measured separately from comfort.",isNew:true},
+  {num:15,area:"Feedback",question:"Feel comfortable providing feedback on PF policy application",threshold:"60%",prep:"Psychological safety narrative from leadership.",note:"NEW C4 question.",isNew:true},
+  {num:16,area:"logistics",question:"Response rate target met (statistically valid sample)",threshold:"ECA-set",prep:"Distribute for minimum 4 weeks; manager nudges; track response rate weekly.",note:"Critical — invalid if threshold not met.",isNew:false},
+  {num:17,area:"logistics",question:"ECA independent third-party distribution confirmed",threshold:"Required",prep:"Coordinate with ECA early. Survey is NOT self-administered.",note:"Logistics must be confirmed with ECA before any comms go out.",isNew:false},
+];
+
+const CAT_CLASS = {A:"cat-a",B:"cat-b",C:"cat-c",D:"cat-d",E:"cat-e"};
+const PRI_CLASS = {High:"high",Medium:"med",Low:"low"};
+const STATUS_CLASS = {"Not Started":"ns","In Progress":"ip","Done":"done","Blocked":"blocked"};
+
+let state = {};
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('pfl_tracker_v2');
+    if (saved) state = JSON.parse(saved);
+  } catch(e) {}
+}
+
+function saveData() {
+  localStorage.setItem('pfl_tracker_v2', JSON.stringify(state));
+  ['save-msg','save-msg-s'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) { el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1800); }
+  });
+}
+
+function getState(key, field, def) {
+  if (!state[key]) state[key] = {};
+  return state[key][field] !== undefined ? state[key][field] : def;
+}
+
+function setState(key, field, val) {
+  if (!state[key]) state[key] = {};
+  state[key][field] = val;
+  updateProgress();
+}
+
+function statusClass(val) { return STATUS_CLASS[val] || 'ns'; }
+
+function renderCriteria() {
+  const tbody = document.getElementById('criteria-body');
+  tbody.innerHTML = CRITERIA.map((c, i) => {
+    const key = 'c_' + c.ref;
+    const status = getState(key, 'status', 'Not Started');
+    const owner  = getState(key, 'owner', '');
+    const evlink = getState(key, 'evlink', '');
+    return `<tr data-cat="${c.cat}" data-type="${c.type}" data-status="${status}" data-search="${(c.ref+' '+c.name+' '+c.note).toLowerCase()}">
+      <td><span class="ref-cell">${c.ref}</span></td>
+      <td><span class="badge ${CAT_CLASS[c.cat]}">${c.catLabel}</span></td>
+      <td><span class="badge ${c.type==='Mandatory'?'mand':'opt'}">${c.type}</span></td>
+      <td>
+        <div class="criteria-name">${c.name}</div>
+        <div class="criteria-note${c.flagNote?' flag':''}">${c.note}</div>
+      </td>
+      <td><div class="ev-text">${c.evidence}</div></td>
+      <td><span class="badge ${PRI_CLASS[c.priority]}">${c.priority}</span></td>
+      <td><input class="editable" placeholder="Assign owner…" value="${owner}" onchange="setState('${key}','owner',this.value)" onblur="saveData()"></td>
+      <td><input class="editable" placeholder="Paste link or path…" value="${evlink}" onchange="setState('${key}','evlink',this.value)" onblur="saveData()"></td>
+      <td>
+        <select class="status-select ${statusClass(status)}" onchange="updateStatus('${key}',this)">
+          <option${status==='Not Started'?' selected':''}>Not Started</option>
+          <option${status==='In Progress'?' selected':''}>In Progress</option>
+          <option${status==='Done'?' selected':''}>Done</option>
+          <option${status==='Blocked'?' selected':''}>Blocked</option>
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+  updateProgress();
+}
+
+function renderSurvey() {
+  const tbody = document.getElementById('survey-body');
+  tbody.innerHTML = SURVEY.map((s, i) => {
+    const key = 's_' + s.num;
+    const status = getState(key, 'status', 'Not Started');
+    const owner  = getState(key, 'owner', '');
+    const notes  = getState(key, 'notes', '');
+    const thClass = s.threshold==='60%'?'opt':(s.threshold==='—'?'':'high');
+    return `<tr data-area="${s.area.toLowerCase()}" data-status="${status}" data-search="${(s.area+' '+s.question+' '+s.note).toLowerCase()}">
+      <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--cobalt);font-weight:500">${s.num}</td>
+      <td>
+        <div style="font-size:12px;font-weight:600;color:var(--text)">${s.area}</div>
+        ${s.isNew?'<span class="badge new-c4" style="margin-top:4px">NEW C4</span>':''}
+      </td>
+      <td style="font-size:13px">${s.question}${s.note?`<div class="survey-area" style="${s.isNew?'color:#8A5500;font-weight:500':''}">${s.note}</div>`:''}
+      </td>
+      <td><span class="badge ${thClass}">${s.threshold}</span></td>
+      <td><div class="ev-text">${s.prep}</div></td>
+      <td><input class="editable" placeholder="Assign owner…" value="${owner}" onchange="setState('${key}','owner',this.value)" onblur="saveData()"></td>
+      <td><textarea class="editable" rows="2" placeholder="Notes…" onchange="setState('${key}','notes',this.value)" onblur="saveData()">${notes}</textarea></td>
+      <td>
+        <select class="status-select ${statusClass(status)}" onchange="updateStatus('${key}',this)">
+          <option${status==='Not Started'?' selected':''}>Not Started</option>
+          <option${status==='In Progress'?' selected':''}>In Progress</option>
+          <option${status==='Done'?' selected':''}>Done</option>
+          <option${status==='Blocked'?' selected':''}>Blocked</option>
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+  updateProgress();
+}
+
+function updateStatus(key, sel) {
+  const val = sel.value;
+  sel.className = 'status-select ' + statusClass(val);
+  const tr = sel.closest('tr');
+  if(tr) tr.dataset.status = val;
+  setState(key, 'status', val);
+  saveData();
+}
+
+function updateProgress() {
+  const mandDone = CRITERIA.filter((c,i)=>c.type==='Mandatory'&&getState('c_'+c.ref,'status','Not Started')==='Done').length;
+  const optDone  = CRITERIA.filter((c,i)=>c.type==='Optional' &&getState('c_'+c.ref,'status','Not Started')==='Done').length;
+  const survDone = SURVEY.filter((s,i)=>getState('s_'+s.num,'status','Not Started')==='Done').length;
+
+  document.getElementById('prog-mand').style.width = (mandDone/8*100)+'%';
+  document.getElementById('prog-mand').className = 'prog-fill'+(mandDone<8?' warn':'');
+  document.getElementById('prog-mand-txt').textContent = mandDone+' / 8 done';
+
+  document.getElementById('prog-opt').style.width = (optDone/11*100)+'%';
+  document.getElementById('prog-opt-txt').textContent = optDone+' / 11 done (need ≥6)';
+
+  document.getElementById('prog-surv').style.width = (survDone/17*100)+'%';
+  document.getElementById('prog-surv-txt').textContent = survDone+' / 17 done';
+}
+
+function applyFilters(tab) {
+  if(tab==='c') {
+    const search = document.getElementById('c-search').value.toLowerCase();
+    const cat    = document.getElementById('c-cat').value;
+    const type   = document.getElementById('c-type').value;
+    const status = document.getElementById('c-status').value;
+    let visible=0;
+    document.querySelectorAll('#criteria-body tr').forEach(tr => {
+      const show = (!search || tr.dataset.search.includes(search))
+        && (!cat    || tr.dataset.cat===cat)
+        && (!type   || tr.dataset.type===type)
+        && (!status || tr.dataset.status===status);
+      tr.classList.toggle('hidden', !show);
+      if(show) visible++;
+    });
+    document.getElementById('tc-criteria').textContent = visible;
+  } else {
+    const search = document.getElementById('s-search').value.toLowerCase();
+    const area   = document.getElementById('s-area').value.toLowerCase();
+    const status = document.getElementById('s-status').value;
+    let visible=0;
+    document.querySelectorAll('#survey-body tr').forEach(tr => {
+      const show = (!search || tr.dataset.search.includes(search))
+        && (!area   || tr.dataset.area.includes(area))
+        && (!status || tr.dataset.status===status);
+      tr.classList.toggle('hidden', !show);
+      if(show) visible++;
+    });
+    document.getElementById('tc-survey').textContent = visible;
+  }
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',['criteria','survey'][i]===tab));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById(tab+'-pane').classList.add('active');
+}
+
+// Init
+loadState();
+renderCriteria();
+renderSurvey();
+
+// Auto-save every 60s
+setInterval(saveData, 60000);
+</script>
+</body>
+</html>
