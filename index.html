@@ -4,806 +4,312 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Parent-Friendly Label — Roadmap Tracker</title>
-<!-- ✅ FIREBASE: paste your config below after setting up your project -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
-  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCrNlu-sqXe65gls_fodvUQIHC6j1XfOyU",
-    authDomain: "pfltracker-a2ee4.firebaseapp.com",
-    databaseURL: "https://pfltracker-a2ee4-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "pfltracker-a2ee4",
-    storageBucket: "pfltracker-a2ee4.firebasestorage.app",
-    messagingSenderId: "324416398146",
-    appId: "1:324416398146:web:b4d49005a86c21be28dedb",
-    measurementId: "G-KFS09BVF3T"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-  const db = getDatabase(app);
-  const dbRef = ref(db, 'pfl_roadmap');
-
-  // Expose to global scope so existing functions can use them
-  window._firebaseSet = (data) => set(dbRef, data);
-  window._firebaseOnValue = (cb) => onValue(dbRef, cb);
-  window._firebaseReady = true;
-
-  // Module scripts run after DOMContentLoaded — main script already ran, so call init directly
-  if (typeof window._appInit === 'function') {
-    window._appInit();
-  }
-</script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy: #1B2A4A;
-    --cobalt: #18518F;
-    --aqua: #1393BD;
-    --purity: #77C8D2;
-    --ice: #E8F7FA;
-    --cream: #F7F9FC;
-    --white: #FFFFFF;
-    --text: #1B2A4A;
-    --muted: #6B7C99;
-    --border: #D6E4EF;
-    --green: #2ECC71;
-    --amber: #F39C12;
-    --red: #E74C3C;
-    --green-bg: #EAFAF1;
-    --amber-bg: #FEF9E7;
-    --red-bg: #FDEDEC;
+    --navy:#1B2A4A; --cobalt:#18518F; --aqua:#1393BD; --purity:#77C8D2;
+    --ice:#E8F7FA; --cream:#F7F9FC; --white:#FFFFFF;
+    --text:#1B2A4A; --muted:#6B7C99; --border:#D6E4EF;
+    --green:#2ECC71; --amber:#F39C12;
+    --green-bg:#EAFAF1; --amber-bg:#FEF9E7;
   }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;padding:0 0 60px}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  #loading-overlay{position:fixed;inset:0;background:var(--cream);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;transition:opacity .3s ease}
+  #loading-overlay.fade{opacity:0;pointer-events:none}
+  .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--cobalt);border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .loading-text{font-size:13px;color:var(--muted);font-weight:500}
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--cream);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 0 0 60px;
-  }
+  .header{background:var(--navy);padding:36px 48px 32px;position:relative;overflow:hidden}
+  .header::before{content:'';position:absolute;top:-60px;right:-60px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(19,147,189,.18) 0%,transparent 70%)}
+  .header::after{content:'';position:absolute;bottom:-40px;left:30%;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(119,200,210,.12) 0%,transparent 70%)}
+  .header-inner{position:relative;z-index:1}
+  .header-label{font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--purity);margin-bottom:8px}
+  .header h1{font-family:'DM Serif Display',serif;font-size:30px;color:var(--white);line-height:1.2;margin-bottom:6px}
+  .header-sub{color:rgba(255,255,255,.55);font-size:13px;font-weight:300}
 
-  /* HEADER */
-  .header {
-    background: var(--navy);
-    padding: 36px 48px 32px;
-    position: relative;
-    overflow: hidden;
-  }
-  .header::before {
-    content: '';
-    position: absolute;
-    top: -60px; right: -60px;
-    width: 280px; height: 280px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(19,147,189,0.18) 0%, transparent 70%);
-  }
-  .header::after {
-    content: '';
-    position: absolute;
-    bottom: -40px; left: 30%;
-    width: 180px; height: 180px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(119,200,210,0.12) 0%, transparent 70%);
-  }
-  .header-inner { position: relative; z-index: 1; }
-  .header-label {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: var(--purity);
-    margin-bottom: 8px;
-  }
-  .header h1 {
-    font-family: 'DM Serif Display', serif;
-    font-size: 30px;
-    color: var(--white);
-    line-height: 1.2;
-    margin-bottom: 6px;
-  }
-  .header-sub {
-    color: rgba(255,255,255,0.55);
-    font-size: 13px;
-    font-weight: 300;
-  }
+  .stats-bar{background:var(--white);border-bottom:1px solid var(--border);padding:16px 48px;display:flex;align-items:center;gap:32px;flex-wrap:wrap}
+  .stat-item{display:flex;align-items:center;gap:8px}
+  .stat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .stat-dot.done{background:var(--green)}.stat-dot.in-progress{background:var(--amber)}.stat-dot.not-started{background:var(--muted)}
+  .stat-text{font-size:12px;color:var(--muted)}.stat-text strong{color:var(--text);font-weight:600}
+  .stat-divider{width:1px;height:20px;background:var(--border)}
+  .progress-wrap{display:flex;align-items:center;gap:10px;margin-left:auto}
+  .progress-bar-outer{width:180px;height:6px;background:var(--border);border-radius:99px;overflow:hidden}
+  .progress-bar-inner{height:100%;background:linear-gradient(90deg,var(--cobalt),var(--aqua));border-radius:99px;transition:width .6s ease}
+  .progress-pct{font-size:12px;font-weight:600;color:var(--cobalt);min-width:36px}
 
-  /* STATS BAR */
-  .stats-bar {
-    background: var(--white);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 48px;
-    display: flex;
-    align-items: center;
-    gap: 32px;
-    flex-wrap: wrap;
-  }
-  .stat-item { display: flex; align-items: center; gap: 8px; }
-  .stat-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .stat-dot.done { background: var(--green); }
-  .stat-dot.in-progress { background: var(--amber); }
-  .stat-dot.not-started { background: var(--muted); }
-  .stat-text { font-size: 12px; color: var(--muted); }
-  .stat-text strong { color: var(--text); font-weight: 600; }
-  .stat-divider { width: 1px; height: 20px; background: var(--border); }
-  .progress-wrap { display: flex; align-items: center; gap: 10px; margin-left: auto; }
-  .progress-bar-outer {
-    width: 180px; height: 6px;
-    background: var(--border);
-    border-radius: 99px;
-    overflow: hidden;
-  }
-  .progress-bar-inner {
-    height: 100%;
-    background: linear-gradient(90deg, var(--cobalt), var(--aqua));
-    border-radius: 99px;
-    transition: width 0.6s ease;
-  }
-  .progress-pct { font-size: 12px; font-weight: 600; color: var(--cobalt); min-width: 36px; }
+  .sync-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;border:1px solid;transition:all .3s}
+  .sync-badge.syncing{background:var(--amber-bg);color:#b7780c;border-color:var(--amber)}
+  .sync-badge.synced{background:var(--green-bg);color:#1a7a40;border-color:var(--green)}
+  .sync-badge.offline{background:#F2F4F7;color:var(--muted);border-color:var(--border)}
 
-  /* PHASE LABELS */
-  .content { padding: 36px 48px; }
-  .phase-block { margin-bottom: 40px; }
-  .phase-heading {
-    display: flex; align-items: center; gap: 12px;
-    margin-bottom: 16px;
-  }
-  .phase-tag {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    padding: 4px 12px;
-    border-radius: 99px;
-    background: var(--navy);
-    color: var(--purity);
-  }
-  .phase-tag.during { background: var(--cobalt); color: var(--white); }
-  .phase-line { flex: 1; height: 1px; background: var(--border); }
+  .content{padding:36px 48px}
+  .phase-block{margin-bottom:40px}
+  .phase-heading{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .phase-tag{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 12px;border-radius:99px;background:var(--navy);color:var(--purity)}
+  .phase-tag.during{background:var(--cobalt);color:var(--white)}
+  .phase-line{flex:1;height:1px;background:var(--border)}
 
-  /* TABLE */
-  .tracker-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--white);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(27,42,74,0.06), 0 4px 16px rgba(27,42,74,0.04);
-  }
-  .tracker-table thead th {
-    background: var(--navy);
-    color: rgba(255,255,255,0.7);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    padding: 12px 16px;
-    text-align: left;
-  }
-  .tracker-table thead th:first-child { width: 40px; text-align: center; }
-  .tracker-table tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background 0.15s;
-  }
-  .tracker-table tbody tr:last-child { border-bottom: none; }
-  .tracker-table tbody tr:hover { background: var(--ice); }
-  .tracker-table td {
-    padding: 14px 16px;
-    font-size: 13px;
-    vertical-align: top;
-    line-height: 1.5;
-  }
-  .tracker-table td:first-child {
-    text-align: center;
-    width: 40px;
-    font-weight: 700;
-    color: var(--muted);
-    font-size: 11px;
-  }
+  .tracker-table{width:100%;border-collapse:collapse;background:var(--white);border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(27,42,74,.06),0 4px 16px rgba(27,42,74,.04)}
+  .tracker-table thead th{background:var(--navy);color:rgba(255,255,255,.7);font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;padding:12px 16px;text-align:left}
+  .tracker-table thead th:first-child{width:40px;text-align:center}
+  .tracker-table tbody tr{border-bottom:1px solid var(--border);transition:background .15s}
+  .tracker-table tbody tr:last-child{border-bottom:none}
+  .tracker-table tbody tr:hover{background:var(--ice)}
+  .tracker-table td{padding:14px 16px;font-size:13px;vertical-align:top;line-height:1.5}
+  .tracker-table td:first-child{text-align:center;width:40px;font-weight:700;color:var(--muted);font-size:11px}
+  .col-step{width:35%}.col-owner{width:12%}.col-timeline{width:13%}.col-status{width:13%}.col-notes{width:27%}
 
-  /* Step title */
-  .step-title { font-weight: 500; color: var(--text); }
-  .step-detail {
-    font-size: 11.5px;
-    color: var(--muted);
-    margin-top: 4px;
-    line-height: 1.55;
-  }
+  .step-title{font-weight:500;color:var(--text)}
+  .step-detail{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.55}
 
-  /* Owner pill */
-  .owner-pill {
-    display: inline-block;
-    background: var(--ice);
-    color: var(--cobalt);
-    font-size: 11px;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: 99px;
-    border: 1px solid rgba(19,147,189,0.2);
-  }
+  .owner-input{width:100%;border:1px solid transparent;border-radius:99px;padding:3px 10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--cobalt);background:var(--ice);outline:none;transition:all .15s;text-align:center}
+  .owner-input:hover{border-color:var(--border)}
+  .owner-input:focus{border-color:var(--aqua);background:var(--white);box-shadow:0 0 0 2px rgba(19,147,189,.15);border-radius:6px}
 
-  /* Timeline badge */
-  .timeline-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 11.5px;
-    font-weight: 500;
-    color: var(--cobalt);
-  }
-  .timeline-badge::before {
-    content: '📅';
-    font-size: 10px;
-  }
-  .timeline-tbd { color: var(--muted); font-size: 11.5px; font-style: italic; }
+  .timeline-input{width:100%;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--cobalt);background:var(--cream);outline:none;cursor:pointer;transition:all .15s}
+  .timeline-input:hover,.timeline-input:focus{border-color:var(--aqua);background:var(--white);box-shadow:0 0 0 2px rgba(19,147,189,.15)}
 
-  /* Status select */
-  .status-select {
-    appearance: none;
-    border: none;
-    border-radius: 6px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11.5px;
-    font-weight: 600;
-    padding: 5px 28px 5px 10px;
-    cursor: pointer;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B7C99' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    outline: none;
-    transition: opacity 0.15s;
-  }
-  .status-select:focus { box-shadow: 0 0 0 2px var(--purity); }
-  .status-select.done { background-color: var(--green-bg); color: var(--green); }
-  .status-select.in-progress { background-color: var(--amber-bg); color: #b7780c; }
-  .status-select.not-started { background-color: #F2F4F7; color: var(--muted); }
+  .status-select{appearance:none;border:none;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:600;padding:5px 28px 5px 10px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%236B7C99' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;outline:none;transition:all .15s;width:100%}
+  .status-select:focus{box-shadow:0 0 0 2px var(--purity)}
+  .status-select.done{background-color:var(--green-bg);color:var(--green)}
+  .status-select.in-progress{background-color:var(--amber-bg);color:#b7780c}
+  .status-select.not-started{background-color:#F2F4F7;color:var(--muted)}
 
-  /* Notes input */
-  .notes-input {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 6px 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11.5px;
-    color: var(--text);
-    background: var(--cream);
-    resize: none;
-    min-height: 38px;
-    transition: border-color 0.15s;
-    outline: none;
-  }
-  .notes-input:focus { border-color: var(--aqua); background: var(--white); }
-  .notes-input::placeholder { color: var(--border); }
+  .notes-input{width:100%;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-family:'DM Sans',sans-serif;font-size:11.5px;color:var(--text);background:var(--cream);resize:none;min-height:38px;transition:border-color .15s;outline:none}
+  .notes-input:focus{border-color:var(--aqua);background:var(--white)}
+  .notes-input::placeholder{color:var(--border)}
 
-  /* Save button */
-  .save-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 48px 0;
-  }
-  .save-btn {
-    background: var(--cobalt);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 28px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.1s;
-  }
-  .save-btn:hover { background: var(--navy); transform: translateY(-1px); }
-  .save-confirm { font-size: 12px; color: var(--green); font-weight: 500; opacity: 0; transition: opacity 0.3s; }
-  .save-confirm.visible { opacity: 1; }
+  .save-bar{display:flex;align-items:center;justify-content:flex-end;gap:12px;padding:20px 48px 0}
 
-  /* Col widths */
-  .col-step { width: 35%; }
-  .col-owner { width: 12%; }
-  .col-timeline { width: 12%; }
-  .col-status { width: 13%; }
-  .col-notes { width: 28%; }
-
-  /* Owner editable input */
-  .owner-input {
-    width: 100%;
-    border: 1px solid transparent;
-    border-radius: 99px;
-    padding: 3px 10px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--cobalt);
-    background: var(--ice);
-    outline: none;
-    transition: all 0.15s;
-    text-align: center;
-  }
-  .owner-input:hover { border-color: var(--border); }
-  .owner-input:focus { border-color: var(--aqua); background: var(--white); box-shadow: 0 0 0 2px rgba(19,147,189,0.15); border-radius: 6px; }
-  .owner-input::placeholder { color: var(--muted); font-weight: 400; }
-
-  /* Timeline date picker */
-  .timeline-input {
-    width: 100%;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 4px 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--cobalt);
-    background: var(--cream);
-    outline: none;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .timeline-input:hover { border-color: var(--aqua); background: var(--white); }
-  .timeline-input:focus { border-color: var(--aqua); background: var(--white); box-shadow: 0 0 0 2px rgba(19,147,189,0.15); }
-  .timeline-original { font-size: 10px; color: var(--muted); margin-top: 3px; font-style: italic; }
-
-  /* Loading overlay */
-  .loading-overlay {
-    position: fixed;
-    inset: 0;
-    background: var(--cream);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 16px;
-    transition: opacity 0.3s ease;
-  }
-  .loading-overlay.hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-  .loading-spinner {
-    width: 36px; height: 36px;
-    border: 3px solid var(--border);
-    border-top-color: var(--cobalt);
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
-  .loading-text { font-size: 13px; color: var(--muted); font-weight: 500; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  @media (max-width: 768px) {
-    .header { padding: 24px 20px; }
-    .stats-bar { padding: 14px 20px; gap: 16px; }
-    .content { padding: 24px 16px; }
-    .save-bar { padding: 16px 16px 0; }
-    .tracker-table thead { display: none; }
-    .tracker-table td { display: block; padding: 6px 14px; }
-    .tracker-table td:first-child { text-align: left; padding-top: 14px; }
-    .tracker-table tr { display: block; padding-bottom: 12px; }
-    .progress-wrap { margin-left: 0; width: 100%; }
+  @media(max-width:768px){
+    .header{padding:24px 20px}.stats-bar{padding:14px 20px;gap:16px}.content{padding:24px 16px}.save-bar{padding:16px 16px 0}
+    .tracker-table thead{display:none}.tracker-table td{display:block;padding:6px 14px}.tracker-table td:first-child{text-align:left;padding-top:14px}.tracker-table tr{display:block;padding-bottom:12px}.progress-wrap{margin-left:0;width:100%}
   }
 </style>
 </head>
 <body>
 
-<div class="loading-overlay" id="loading-overlay">
-  <div class="loading-spinner"></div>
-  <div class="loading-text">Loading…</div>
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Syncing…</div>
 </div>
 
 <div class="header">
   <div class="header-inner">
     <div class="header-label">PureHealth · Culture & Engagement</div>
     <h1>Parent-Friendly Label<br>Cycle 4 Roadmap</h1>
-    <div class="header-sub">Application readiness tracker — updated live in browser</div>
+    <div class="header-sub">Application readiness tracker — autosaves on every change</div>
   </div>
 </div>
 
 <div class="stats-bar">
-  <div class="stat-item">
-    <div class="stat-dot done"></div>
-    <div class="stat-text"><strong id="count-done">0</strong> Done</div>
-  </div>
+  <div class="stat-item"><div class="stat-dot done"></div><div class="stat-text"><strong id="count-done">0</strong> Done</div></div>
   <div class="stat-divider"></div>
-  <div class="stat-item">
-    <div class="stat-dot in-progress"></div>
-    <div class="stat-text"><strong id="count-ip">0</strong> In Progress</div>
-  </div>
+  <div class="stat-item"><div class="stat-dot in-progress"></div><div class="stat-text"><strong id="count-ip">0</strong> In Progress</div></div>
   <div class="stat-divider"></div>
-  <div class="stat-item">
-    <div class="stat-dot not-started"></div>
-    <div class="stat-text"><strong id="count-ns">0</strong> Not Started</div>
-  </div>
+  <div class="stat-item"><div class="stat-dot not-started"></div><div class="stat-text"><strong id="count-ns">0</strong> Not Started</div></div>
   <div class="stat-divider"></div>
   <div class="progress-wrap">
-    <div class="progress-bar-outer">
-      <div class="progress-bar-inner" id="progress-fill" style="width:0%"></div>
-    </div>
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="progress-fill" style="width:0%"></div></div>
     <div class="progress-pct" id="progress-pct">0%</div>
   </div>
 </div>
 
 <div class="content">
-
-  <!-- PRE-SURVEY PHASE -->
   <div class="phase-block">
-    <div class="phase-heading">
-      <div class="phase-tag">Pre Survey</div>
-      <div class="phase-line"></div>
-    </div>
-
-    <table class="tracker-table" id="table-pre">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th class="col-step">Step / Activity</th>
-          <th class="col-owner">Owner</th>
-          <th class="col-timeline">Timeline</th>
-          <th class="col-status">Status</th>
-          <th class="col-notes">Notes</th>
-        </tr>
-      </thead>
+    <div class="phase-heading"><div class="phase-tag">Pre Survey</div><div class="phase-line"></div></div>
+    <table class="tracker-table">
+      <thead><tr><th>#</th><th class="col-step">Step / Activity</th><th class="col-owner">Owner</th><th class="col-timeline">Timeline</th><th class="col-status">Status</th><th class="col-notes">Notes</th></tr></thead>
       <tbody id="tbody-pre"></tbody>
     </table>
   </div>
-
-  <!-- DURING SURVEY PHASE -->
   <div class="phase-block">
-    <div class="phase-heading">
-      <div class="phase-tag during">During Survey</div>
-      <div class="phase-line"></div>
-    </div>
-
-    <table class="tracker-table" id="table-during">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th class="col-step">Step / Activity</th>
-          <th class="col-owner">Owner</th>
-          <th class="col-timeline">Timeline</th>
-          <th class="col-status">Status</th>
-          <th class="col-notes">Notes</th>
-        </tr>
-      </thead>
+    <div class="phase-heading"><div class="phase-tag during">During Survey</div><div class="phase-line"></div></div>
+    <table class="tracker-table">
+      <thead><tr><th>#</th><th class="col-step">Step / Activity</th><th class="col-owner">Owner</th><th class="col-timeline">Timeline</th><th class="col-status">Status</th><th class="col-notes">Notes</th></tr></thead>
       <tbody id="tbody-during"></tbody>
     </table>
   </div>
-
 </div>
 
 <div class="save-bar">
-  <button class="save-btn" onclick="saveData()">💾 Save Progress</button>
-  <div style="display:flex;align-items:center;gap:16px">
-    <span id="sync-indicator" style="font-size:12px;font-weight:500">⏳ Connecting…</span>
-    <span class="save-confirm" id="save-confirm">✓ Saved</span>
-  </div>
+  <span class="sync-badge syncing" id="sync-badge">⏳ Connecting…</span>
 </div>
 
-<script>
-const data = {
+<script type="module">
+import { initializeApp }                  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAnalytics }                   from "https://www.gstatic.com/firebasejs/11.0.0/firebase-analytics.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-database.js";
+
+const app    = initializeApp({
+  apiKey:"AIzaSyCrNlu-sqXe65gls_fodvUQIHC6j1XfOyU",
+  authDomain:"pfltracker-a2ee4.firebaseapp.com",
+  databaseURL:"https://pfltracker-a2ee4-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"pfltracker-a2ee4",
+  storageBucket:"pfltracker-a2ee4.firebasestorage.app",
+  messagingSenderId:"324416398146",
+  appId:"1:324416398146:web:b4d49005a86c21be28dedb",
+  measurementId:"G-KFS09BVF3T"
+});
+getAnalytics(app);
+const dbRef = ref(getDatabase(app), 'pfl_roadmap');
+
+// ── ROWS ──────────────────────────────────────────────────────────────────────
+const ROWS = {
   pre: [
-    {
-      id: 1,
-      step: "Demographics collection",
-      detail: "PHMS + Talent One headcount, number of employees with children (0–8 age range), parents of POD",
-      owner: "Cosela",
-      timeline: "15th June"
-    },
-    {
-      id: 2,
-      step: "Policy amendments & approvals",
-      detail: "Maternity Leave, Paternal Leave, Compassionate Leave, Flexible Work — embed in contracts as appropriate",
-      owner: "Kate",
-      timeline: "10th May"
-    },
-    {
-      id: 3,
-      step: "Policy communication workshops / channels",
-      detail: "Induction, mailers, policy session of the month",
-      owner: "Kate",
-      timeline: "10th May onwards"
-    },
-    {
-      id: "3b",
-      step: "Manager & employee training sessions",
-      detail: "Formalized coaching/mentoring pre/during/post parental leave · Parenting education resources (seminars, ECA Parents Platform) · Caregiver EAP · Awareness of parent-friendly policies · Targeted caregiver training across POD, toddlers, children",
-      owner: "Sharood / Dana?",
-      timeline: "10th May onwards"
-    },
-    {
-      id: 4,
-      step: "Leave transition support",
-      detail: "Communications sent prior to parental leave detailing support options & return-to-work touch points with managers",
-      owner: "Kate",
-      timeline: "1st May onwards"
-    },
-    {
-      id: 5,
-      step: "Peer-led family support groups",
-      detail: "Parents of POD, general parent support group, father support groups — formalized networking & leadership programs",
-      owner: "Sharood",
-      timeline: "TBD"
-    },
-    {
-      id: 6,
-      step: "Mental wellbeing support via PURA",
-      detail: "Wellness programs: managing negative thoughts, sleep meditation guides",
-      owner: "Lynn",
-      timeline: "20th May"
-    },
-    {
-      id: 7,
-      step: "Upload all evidence to shared folder",
-      detail: "Refer to Azra's presentation for full evidence list required",
-      owner: "All",
-      timeline: "10th June"
-    },
-    {
-      id: 8,
-      step: "Complete application form",
-      detail: "—",
-      owner: "Azra",
-      timeline: "30th June"
-    }
+    {id:"1",  step:"Demographics collection",                   detail:"PHMS + Talent One headcount, number of employees with children (0–8 age range), parents of POD",owner:"Cosela",timeline:"2026-06-15"},
+    {id:"2",  step:"Policy amendments & approvals",             detail:"Maternity Leave, Paternal Leave, Compassionate Leave, Flexible Work — embed in contracts as appropriate",owner:"Kate",timeline:"2026-05-10"},
+    {id:"3a", step:"Policy communication workshops / channels", detail:"Induction, mailers, policy session of the month",owner:"Kate",timeline:"2026-05-10"},
+    {id:"3b", step:"Manager & employee training sessions",      detail:"Formalized coaching/mentoring pre/during/post parental leave · Parenting education resources · Caregiver EAP · Awareness of parent-friendly policies · Targeted caregiver training across POD, toddlers, children",owner:"Sharood / Dana?",timeline:""},
+    {id:"4",  step:"Leave transition support",                  detail:"Communications sent prior to parental leave detailing support options & return-to-work touch points with managers",owner:"Kate",timeline:"2026-05-01"},
+    {id:"5",  step:"Peer-led family support groups",            detail:"Parents of POD, general parent support group, father support groups — formalized networking & leadership programs",owner:"Sharood",timeline:""},
+    {id:"6",  step:"Mental wellbeing support via PURA",         detail:"Wellness programs: managing negative thoughts, sleep meditation guides",owner:"Lynn",timeline:"2026-05-20"},
+    {id:"7",  step:"Upload all evidence to shared folder",      detail:"Refer to Azra's presentation for full evidence list required",owner:"All",timeline:"2026-06-10"},
+    {id:"8",  step:"Complete application form",                 detail:"",owner:"Azra",timeline:"2026-06-30"},
   ],
   during: [
-    {
-      id: 9,
-      step: "Drive 80%+ survey participation",
-      detail: "—",
-      owner: "Lynn",
-      timeline: "31st July onwards"
-    }
+    {id:"9",  step:"Drive 80%+ survey participation",           detail:"",owner:"Lynn",timeline:"2026-07-31"},
   ]
 };
 
-const STORAGE_KEY = 'pfl_roadmap_v1';
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+const setBadge = (mode, text) => {
+  const b = document.getElementById('sync-badge');
+  b.className = 'sync-badge ' + mode;
+  b.textContent = text;
+};
 
-function getCurrentState() {
-  const saved = {};
-  document.querySelectorAll('.status-select').forEach(sel => {
-    saved['status_' + sel.dataset.id] = sel.value;
-  });
-  document.querySelectorAll('.notes-input').forEach(inp => {
-    saved['notes_' + inp.dataset.id] = inp.value;
-  });
-  document.querySelectorAll('.owner-input').forEach(inp => {
-    saved['owner_' + inp.dataset.id] = inp.value;
-  });
-  document.querySelectorAll('.timeline-input').forEach(inp => {
-    saved['timeline_' + inp.dataset.id] = inp.value;
-  });
-  return saved;
-}
+const hideOverlay = () => {
+  const o = document.getElementById('loading-overlay');
+  o.classList.add('fade');
+  setTimeout(() => o.remove(), 350);
+};
 
-function applyState(saved) {
-  document.querySelectorAll('.status-select').forEach(sel => {
-    const val = saved['status_' + sel.dataset.id];
-    if (val) { sel.value = val; applyStatusStyle(sel); }
-  });
-  document.querySelectorAll('.notes-input').forEach(inp => {
-    const val = saved['notes_' + inp.dataset.id];
-    if (val !== undefined) inp.value = val;
-  });
-  document.querySelectorAll('.owner-input').forEach(inp => {
-    const val = saved['owner_' + inp.dataset.id];
-    if (val !== undefined) inp.value = val;
-  });
-  document.querySelectorAll('.timeline-input').forEach(inp => {
-    const val = saved['timeline_' + inp.dataset.id];
-    if (val !== undefined) inp.value = val;
-  });
-  updateStats();
-}
-
-function showSaveConfirm(msg) {
-  const el = document.getElementById('save-confirm');
-  el.textContent = msg || '✓ Saved';
-  el.classList.add('visible');
-  setTimeout(() => el.classList.remove('visible'), 2500);
-}
-
-function saveData() {
-  const saved = getCurrentState();
-
-  // Save to Firebase if ready
-  if (window._firebaseReady && window._firebaseSet) {
-    window._firebaseSet(saved)
-      .then(() => showSaveConfirm('✓ Saved to cloud'))
-      .catch(err => {
-        console.warn('Firebase save failed, falling back to localStorage', err);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
-        showSaveConfirm('✓ Saved locally');
-      });
-  } else {
-    // Fallback to localStorage
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
-    showSaveConfirm('✓ Saved locally');
-  }
-}
-
-function loadSaved() {
-  // Returns a promise-like — resolves with saved data
-  return new Promise((resolve) => {
-    if (window._firebaseReady && window._firebaseOnValue) {
-      window._firebaseOnValue((snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          resolve(data);
-        } else {
-          // Nothing in Firebase yet, check localStorage
-          try {
-            resolve(JSON.parse(localStorage.getItem(STORAGE_KEY)) || {});
-          } catch { resolve({}); }
-        }
-      });
-    } else {
-      // Firebase not loaded yet — wait briefly then fall back to localStorage
-      setTimeout(() => {
-        if (window._firebaseReady && window._firebaseOnValue) {
-          window._firebaseOnValue((snapshot) => {
-            resolve(snapshot.val() || {});
-          });
-        } else {
-          try {
-            resolve(JSON.parse(localStorage.getItem(STORAGE_KEY)) || {});
-          } catch { resolve({}); }
-        }
-      }, 800);
-    }
-  });
-}
+const debounce = (fn, ms) => {
+  let t;
+  return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+};
 
 function updateStats() {
-  const selects = document.querySelectorAll('.status-select');
-  let done = 0, ip = 0, ns = 0;
-  selects.forEach(s => {
-    if (s.value === 'done') done++;
-    else if (s.value === 'in-progress') ip++;
-    else ns++;
-  });
+  const sels = [...document.querySelectorAll('.status-select')];
+  const done = sels.filter(s => s.value === 'done').length;
+  const ip   = sels.filter(s => s.value === 'in-progress').length;
+  const ns   = sels.length - done - ip;
   document.getElementById('count-done').textContent = done;
-  document.getElementById('count-ip').textContent = ip;
-  document.getElementById('count-ns').textContent = ns;
-  const total = selects.length;
-  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('count-ip').textContent   = ip;
+  document.getElementById('count-ns').textContent   = ns;
+  const pct = sels.length ? Math.round(done / sels.length * 100) : 0;
   document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('progress-pct').textContent = pct + '%';
+  document.getElementById('progress-pct').textContent  = pct + '%';
 }
 
-function applyStatusStyle(sel) {
-  sel.className = 'status-select ' + sel.value;
+// ── SAVE ──────────────────────────────────────────────────────────────────────
+function save() {
+  const state = {};
+  document.querySelectorAll('[data-id]').forEach(el => {
+    const id = el.dataset.id;
+    if (!state[id]) state[id] = {};
+    if (el.classList.contains('status-select'))  state[id].status   = el.value;
+    if (el.classList.contains('owner-input'))    state[id].owner    = el.value;
+    if (el.classList.contains('timeline-input')) state[id].timeline = el.value;
+    if (el.classList.contains('notes-input'))    state[id].notes    = el.value;
+  });
+  setBadge('syncing', '⏳ Saving…');
+  set(dbRef, state)
+    .then(()  => setBadge('synced',  '✓ Saved'))
+    .catch(e  => { console.error(e); setBadge('offline', '⚠ Save failed'); });
 }
 
-function parseToDateInput(timeline) {
-  // Tries to convert "10th May", "1st June" etc to YYYY-MM-DD for the date input
-  if (!timeline || timeline === 'TBD' || timeline === '—') return '';
-  // Strip ordinal suffixes
-  const clean = timeline.replace(/(\d+)(st|nd|rd|th)/i, '$1').replace(' onwards', '').trim();
-  const parsed = new Date(clean + ' 2026');
-  if (isNaN(parsed)) return '';
-  return parsed.toISOString().split('T')[0];
+const debouncedSave = debounce(save, 600);
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function buildRow(row, saved) {
+  const s        = saved || {};
+  const status   = s.status   ?? 'not-started';
+  const owner    = s.owner    ?? row.owner   ?? '';
+  const timeline = s.timeline ?? row.timeline ?? '';
+  const notes    = s.notes    ?? '';
+  return `<tr>
+    <td>${row.id}</td>
+    <td>
+      <div class="step-title">${row.step}</div>
+      ${row.detail ? `<div class="step-detail">${row.detail}</div>` : ''}
+    </td>
+    <td><input class="owner-input"    data-id="${row.id}" value="${owner}"    placeholder="Assign owner…"></td>
+    <td><input type="date" class="timeline-input" data-id="${row.id}" value="${timeline}"></td>
+    <td>
+      <select class="status-select ${status}" data-id="${row.id}">
+        <option value="not-started" ${status==='not-started'?'selected':''}>Not Started</option>
+        <option value="in-progress" ${status==='in-progress'?'selected':''}>In Progress</option>
+        <option value="done"        ${status==='done'       ?'selected':''}>Done ✓</option>
+      </select>
+    </td>
+    <td><textarea class="notes-input" data-id="${row.id}" rows="2" placeholder="Add notes…">${notes}</textarea></td>
+  </tr>`;
 }
 
-function formatDateDisplay(isoDate) {
-  if (!isoDate) return '';
-  const d = new Date(isoDate + 'T00:00:00');
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-function buildRow(item, saved) {
-  const statusVal  = saved['status_'   + item.id] || 'not-started';
-  const notesVal   = saved['notes_'    + item.id] || '';
-  const ownerVal   = saved['owner_'    + item.id] !== undefined ? saved['owner_' + item.id] : item.owner;
-  const timelineVal = saved['timeline_' + item.id] !== undefined
-    ? saved['timeline_' + item.id]
-    : parseToDateInput(item.timeline);
-
-  return `
-    <tr>
-      <td>${item.id}</td>
-      <td>
-        <div class="step-title">${item.step}</div>
-        ${item.detail && item.detail !== '—' ? `<div class="step-detail">${item.detail}</div>` : ''}
-      </td>
-      <td>
-        <input
-          class="owner-input"
-          data-id="${item.id}"
-          value="${ownerVal}"
-          placeholder="Assign owner…"
-          onblur="saveData()"
-        >
-      </td>
-      <td>
-        <input
-          type="date"
-          class="timeline-input"
-          data-id="${item.id}"
-          value="${timelineVal}"
-          onchange="saveData()"
-        >
-        ${!timelineVal && item.timeline && item.timeline !== 'TBD' ? `<div class="timeline-original">${item.timeline}</div>` : ''}
-      </td>
-      <td>
-        <select class="status-select ${statusVal}" data-id="${item.id}" onchange="applyStatusStyle(this); updateStats()">
-          <option value="not-started" ${statusVal==='not-started'?'selected':''}>Not Started</option>
-          <option value="in-progress" ${statusVal==='in-progress'?'selected':''}>In Progress</option>
-          <option value="done" ${statusVal==='done'?'selected':''}>Done ✓</option>
-        </select>
-      </td>
-      <td>
-        <textarea class="notes-input" data-id="${item.id}" placeholder="Add notes…" rows="2">${notesVal}</textarea>
-      </td>
-    </tr>`;
-}
-
-function showLoadingState() {
-  const indicator = document.getElementById('sync-indicator');
-  if (indicator) { indicator.textContent = '⏳ Syncing…'; indicator.style.color = '#F39C12'; }
-}
-function showSyncedState() {
-  const indicator = document.getElementById('sync-indicator');
-  if (indicator) { indicator.textContent = '☁️ Live sync on'; indicator.style.color = '#2ECC71'; }
-}
-function showOfflineState() {
-  const indicator = document.getElementById('sync-indicator');
-  if (indicator) { indicator.textContent = '💾 Local only'; indicator.style.color = '#6B7C99'; }
-}
-
-async function init() {
-  // Build table with empty state first so it's not blank
-  const emptySaved = {};
-  document.getElementById('tbody-pre').innerHTML = data.pre.map(i => buildRow(i, emptySaved)).join('');
-  document.getElementById('tbody-during').innerHTML = data.during.map(i => buildRow(i, emptySaved)).join('');
+function renderAll(saved) {
+  document.getElementById('tbody-pre').innerHTML    = ROWS.pre.map(r    => buildRow(r, saved[r.id])).join('');
+  document.getElementById('tbody-during').innerHTML = ROWS.during.map(r => buildRow(r, saved[r.id])).join('');
   updateStats();
 
-  showLoadingState();
-
-  function hideOverlay() {
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay) {
-      overlay.classList.add('hidden');
-      setTimeout(() => overlay.remove(), 350);
-    }
-  }
-
-  try {
-    const saved = await loadSaved();
-    applyState(saved);
-    hideOverlay();
-
-    if (window._firebaseReady) {
-      showSyncedState();
-      // Real-time listener — updates all clients when anyone saves
-      window._firebaseOnValue((snapshot) => {
-        const latest = snapshot.val();
-        if (latest) applyState(latest);
-      });
-    } else {
-      showOfflineState();
-    }
-  } catch(e) {
-    console.warn('Load failed:', e);
-    showOfflineState();
-    hideOverlay();
-  }
-
-  // Auto-save on notes/owner blur
-  document.querySelectorAll('.notes-input, .owner-input').forEach(inp => {
-    inp.addEventListener('blur', saveData);
+  // Status → instant save + restyle
+  document.querySelectorAll('.status-select').forEach(el => {
+    el.addEventListener('change', () => {
+      el.className = 'status-select ' + el.value;
+      updateStats();
+      save();
+    });
+  });
+  // Date → instant save
+  document.querySelectorAll('.timeline-input').forEach(el => {
+    el.addEventListener('change', save);
+  });
+  // Text → debounced on input, immediate on blur
+  document.querySelectorAll('.owner-input, .notes-input').forEach(el => {
+    el.addEventListener('input', debouncedSave);
+    el.addEventListener('blur',  save);
   });
 }
 
-// Register as _appInit so the Firebase module can call it once ready
-window._appInit = init;
+// ── INIT via onValue ──────────────────────────────────────────────────────────
+// onValue fires immediately with current DB state, then on every remote change.
+let firstLoad = true;
 
-// If Firebase module already ran before this script (unlikely but safe), call now
-// Otherwise the module script will call window._appInit() itself
+onValue(dbRef, (snapshot) => {
+  const saved = snapshot.val() || {};
+
+  if (firstLoad) {
+    firstLoad = false;
+    renderAll(saved);
+    hideOverlay();
+    setBadge('synced', '✓ Live sync on');
+  } else {
+    // Remote change from another user — patch without clobbering active inputs
+    Object.entries(saved).forEach(([id, vals]) => {
+      const get = cls => document.querySelector(`.${cls}[data-id="${id}"]`);
+      const sel  = get('status-select');
+      const own  = get('owner-input');
+      const tl   = get('timeline-input');
+      const note = get('notes-input');
+      if (sel  && document.activeElement !== sel)  { sel.value  = vals.status;   sel.className = 'status-select ' + vals.status; }
+      if (own  && document.activeElement !== own)  { own.value  = vals.owner   ?? ''; }
+      if (tl   && document.activeElement !== tl)   { tl.value   = vals.timeline ?? ''; }
+      if (note && document.activeElement !== note) { note.value = vals.notes    ?? ''; }
+    });
+    updateStats();
+  }
+
+}, err => {
+  console.error('Firebase error:', err);
+  renderAll({});
+  hideOverlay();
+  setBadge('offline', '⚠ Offline — not saving');
+});
 </script>
 </body>
 </html>
